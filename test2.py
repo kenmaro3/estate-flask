@@ -174,8 +174,8 @@ def get_info_from_blocks_by_index(blocks, index_block, df):
     data = get_info_from_detail_link(link_href, data)
 
 
-    data["土地面積（坪）"] = float(data["土地面積"])/0.306
-    data["建物面積（坪）"] = float(data["建物面積"])/0.306
+    data["土地面積（坪）"] = float(data["土地面積"])/3.306
+    data["建物面積（坪）"] = float(data["建物面積"])/3.306
     data["坪単価"] = float(data["販売価格"])/data["土地面積（坪）"]
 
     df = df.append(data, ignore_index=True)
