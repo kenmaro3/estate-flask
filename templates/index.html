@@ -7,20 +7,20 @@
 </head>
 
 <body>
-    下にエクセル化したいURLを入れてください。
+    取得したいデータの区名を選択してください。(毎日更新されます)
     <form action="/" method="POST">
         <div class="container">
 
-            <div class="urlContainer">
-                <h2>スーモ検索URL</h2>
-                <input name="target"></input>
-
-            </div>
 
             <div class="numberContainer">
-                <h2>検索件数（最大１０００）１件約１秒かかります</h2>
-                <h3>サーバに負荷がかからないように留意してください。</h3>
-                <input name="num" type="number" min="1" max="1000"></input>
+                <select name="target" id="pet-select">
+                    <option value="">--Please choose --</option>
+                    <option value="minato">港区</option>
+                    <option value="meguro">目黒区</option>
+                    <option value="shinagawa">品川区</option>
+                    <option value="shibuya">渋谷区</option>
+                </select>
+                
             </div>
 
             <div class="buttonContainer">

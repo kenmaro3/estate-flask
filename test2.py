@@ -182,6 +182,52 @@ def get_info_from_blocks_by_index(blocks, index_block, df):
 
     return df
 
+def scrape_url_all(url_base):
+
+    df = pd.DataFrame(index=[], columns=cols_total)
+
+    page = 0
+    url = url_base.format(page)
+    try:
+        html = urllib.request.urlopen(url).read()
+    except:
+        raise Exception("url")
+    soup = BeautifulSoup(html)
+    hit_count = soup.find("div", class_="pagination_set-hit").text
+
+    # 各urlのページ数計算
+    page_count = get_page_count(hit_count)
+
+    data = {}
+    for page_index, page in enumerate(range(1, page_count + 1)):
+        print(f"\n\n=================={page_index}/{page_count}")
+    # for page_index, page in enumerate(range(1, 2)):
+        # ページごとにリクエスト
+        if page == 1:
+            pass
+        elif page == 2:
+            url = update_query(url, "pn", "", page)
+        else:
+            url = update_query(url, "pn", str(page-1), page)
+        print(url)
+        try:
+            print("\n\nhere===========")
+            print(url)
+            html = urllib.request.urlopen(url).read()
+            print(f"pages: {page_index}/{page_count} of {page_index}: okay")
+        except:
+            print(f"pages: {page_index}/{page_count} of {page_index}: failed")
+            continue
+        soup = BeautifulSoup(html)
+
+        blocks = soup.findAll("div", "property_unit-content") 
+
+        for index_block in range(len(blocks)):
+            time.sleep(1)
+            df = get_info_from_blocks_by_index(blocks, index_block, df)
+            print(f"blocks: {index_block}/{len(blocks)}: okay")
+
+    return df
 
 def scrape_url(url, name, num):
     assert num > 0
@@ -228,14 +274,7 @@ def scrape_url(url, name, num):
         blocks = soup.findAll("div", "property_unit-content") 
 
         for index_block in range(len(blocks)):
-        # for index_block in range(5):
             time.sleep(1)
-        #for index_block in range(3):
-            # try:
-            #     df = get_info_from_blocks_by_index(blocks, index_block, df)
-            #     print(f"{index_block}/{len(blocks)}: okay")
-            # except:
-            #     print(f"{index_block}/{len(blocks)}: failed")
             df = get_info_from_blocks_by_index(blocks, index_block, df)
             print(f"blocks: {index_block}/{len(blocks)}: okay")
             if len(df) == num:
@@ -243,15 +282,6 @@ def scrape_url(url, name, num):
                 df.to_excel(f"{name}.xlsx", index=False, encoding = "utf-8")
                 return df.to_json()
 
-            # try:
-            #     df = get_info_from_blocks_by_index(blocks, index_block, df)
-            #     print(f"blocks: {index_block}/{len(blocks)}: okay")
-            # except:
-            #     print(f"blocks: {index_block}/{len(blocks)}: failed")
-
-        #print(df)
-        #print(len(df))
-        #df.to_csv(r"property.csv", index=False, encoding = "utf-8")
     df.to_excel(f"{name}.xlsx", index=False, encoding = "utf-8")
     return df.to_json()
 
