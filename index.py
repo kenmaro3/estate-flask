@@ -64,8 +64,9 @@ sched.add_job(task_scrape,'interval',days=days_frequency)
 sched.add_job(task_upload,'interval',days=days_frequency) 
 sched.start()
 
-#task_scrape()
-task_download()
+task_scrape()
+task_upload()
+# task_download()
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -117,7 +118,6 @@ def csv_download():
     file_name = f"{table_name}.xlsx"
     df.to_excel(file_name)
     return send_from_directory("./", file_name, as_attachment=True)
-    return table_name
 
 
         # try:
@@ -133,6 +133,9 @@ def csv_download():
         #             <input name="num"></input>
         #             </form>"""
 
+@app.route("/update_db", methods=["GET"])
+def update_db():
+    task_download()
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=8888, threaded=True)
