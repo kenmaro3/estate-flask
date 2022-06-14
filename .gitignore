@@ -4,4 +4,4 @@ __pycache__
 .vercel
 .env
 *.db
-*.txt
+log.txt
