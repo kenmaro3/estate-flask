@@ -1,0 +1,21 @@
+body {
+  background: #F4E7D3;
+}
+h1 {
+  color: #B01335;
+}
+p {
+  color: #1F4E5F;
+}
+
+table {
+  border-collapse:  collapse; /* セルの線を重ねる */
+}
+
+tr:nth-child(odd) {
+  background-color:  #ddd;    /* 背景色指定 */
+}
+
+th,td {
+  padding: 5px 10px;          /* 余白指定 */
+}

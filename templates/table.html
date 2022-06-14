@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <title>スーモパーサー</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <meta charset="utf-8" />
+    <script type="text/javascript"> 
+        
+        function check(){
+        
+            if(window.confirm('エクセルをダウンロードしますか？')){ // 確認ダイアログを表示
+        
+                return true; // 「OK」時は送信を実行
+        
+            }
+            else{ // 「キャンセル」時の処理
+        
+                window.alert('キャンセルされました'); // 警告ダイアログを表示
+                return false; // 送信を中止
+        
+            }
+        
+        }
+        
+        </script>
+</head>
+
+<body>
+    <form method="post" name="form1" action="/csv" onSubmit="return check()">
+        <input type="hidden" name="table_name" value="{{table_name}}">
+        <!-- <a href="javascript:form1.submit()">エクセルを取得する</a> -->
+        <input type="submit" value="詳細情報をエクセルで取得する">
+    </form>
+	<h1>結果表示</h1>
+	<table>
+		<thead>
+			<tr>{%- for i in df_columns %}<th>{{ i|e }}</th>{%- endfor %}</tr>
+		</thead> 
+		<tbody>
+			{%- for i in df_values %}
+			<tr>{% for j in i %}<td>{{ j|e }}</td>{% endfor %}</tr>
+			{%- endfor %}
+		</tbody>
+	</table>
+</body>
+
+</html>

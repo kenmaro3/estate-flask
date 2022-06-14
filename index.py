@@ -22,10 +22,16 @@ ku_to_sc_code = dict(
     shibuya="13113",
     )
 
+
+cols_to_show_in_html = ['物件名', '最寄駅', '築年数', 'リンク', '坪単価']
+
 how_many_scrape = 100
 days_frequency = 1
 sqlite_db = "sample.db"
 s3_bucket = "estate-flask-sqlite-backup"
+
+def price_parse(x):
+    return '¥' +'{:,.0f}'.format(x)
 
 def task_scrape():
     today = date.today()
@@ -58,6 +64,7 @@ sched.add_job(task_scrape,'interval',days=days_frequency)
 sched.add_job(task_upload,'interval',days=days_frequency) 
 sched.start()
 
+#task_scrape()
 task_download()
 
 
@@ -87,10 +94,30 @@ def home():
             df = handle_db.df_from_sqlite(table_name, sqlite_db)
         except:
             return "show failed"
-        file_name = f"{ku}_{target_date_parse}.xlsx"
-        df.to_excel(file_name)
-        return send_from_directory("./", file_name, as_attachment=True)
+        # file_name = f"{ku}_{target_date_parse}.xlsx"
+        # df.to_excel(file_name)
+        # return send_from_directory("./", file_name, as_attachment=True)
 
+        print(df.columns)
+        df_to_show = df[cols_to_show_in_html]
+        df_to_show["坪単価"] = df_to_show["坪単価"].map(price_parse)
+        df_values = df_to_show.values.tolist()
+        df_columns = df_to_show.columns.tolist()
+
+
+        return render_template("table.html", table_name=table_name, df_values=df_values, df_columns=df_columns)
+
+@app.route("/csv", methods=["POST"])
+def csv_download():
+    table_name = request.form["table_name"]
+    try:
+        df = handle_db.df_from_sqlite(table_name, sqlite_db)
+    except:
+        return "show failed"
+    file_name = f"{table_name}.xlsx"
+    df.to_excel(file_name)
+    return send_from_directory("./", file_name, as_attachment=True)
+    return table_name
 
 
         # try:
