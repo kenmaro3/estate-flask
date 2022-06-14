@@ -7,20 +7,31 @@
 </head>
 
 <body>
-    取得したいデータの区名を選択してください。(毎日更新されます)
+    取得したいデータを選択してください。(毎日更新されます)
     <form action="/" method="POST">
         <div class="container">
 
 
             <div class="numberContainer">
-                <select name="target" id="pet-select">
-                    <option value="">--Please choose --</option>
+                <select name="target_ku" id="pet-select">
+                    <option value="">-- 区を選択 --</option>
                     <option value="minato">港区</option>
                     <option value="meguro">目黒区</option>
                     <option value="shinagawa">品川区</option>
                     <option value="shibuya">渋谷区</option>
+                    <option value="shinjuku">新宿区</option>
                 </select>
                 
+            </div>
+
+            <div class="table_name_container">
+                <select name="target_date" id="pet-select">
+                    <option value="">-- 日付を選択 --</option>
+                    {% for date in dates %}
+                    <option value="{{date}}">{{date}}</option>
+                    {% endfor %}
+                </select>
+
             </div>
 
             <div class="buttonContainer">

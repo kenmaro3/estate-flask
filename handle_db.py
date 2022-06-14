@@ -36,14 +36,19 @@ en_col = [
     "tsubo_tanka",
 ]
 
-def df_from_sqlite(table_name):
-    db_name = u'sample.db'
+def get_all_table_from_sqlite(db_name):
+    conn = sqlite3.connect(db_name) 
+    cursorObj = conn.cursor()
+    cursorObj.execute('SELECT name from sqlite_master where type= "table"')
+    return cursorObj.fetchall()
+
+
+def df_from_sqlite(table_name, db_name):
     conn = sqlite3.connect(db_name) 
     df_sel = pd.read_sql_query(sql=f"SELECT * FROM {table_name}", con=conn)
     return df_sel
 
-def df_store_to_sqlite(df, table_name):
-    db_name = u'sample.db'
+def df_store_to_sqlite(df, table_name, db_name):
     conn = sqlite3.connect(db_name) 
     df.to_sql(table_name, conn, if_exists='append', index=None)
 

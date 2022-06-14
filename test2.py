@@ -182,7 +182,7 @@ def get_info_from_blocks_by_index(blocks, index_block, df):
 
     return df
 
-def scrape_url_all(url_base):
+def scrape_url_all(url_base, num=None):
 
     df = pd.DataFrame(index=[], columns=cols_total)
 
@@ -211,8 +211,6 @@ def scrape_url_all(url_base):
             url = update_query(url, "pn", str(page-1), page)
         print(url)
         try:
-            print("\n\nhere===========")
-            print(url)
             html = urllib.request.urlopen(url).read()
             print(f"pages: {page_index}/{page_count} of {page_index}: okay")
         except:
@@ -226,6 +224,10 @@ def scrape_url_all(url_base):
             time.sleep(1)
             df = get_info_from_blocks_by_index(blocks, index_block, df)
             print(f"blocks: {index_block}/{len(blocks)}: okay")
+            if num is not None:
+                if len(df) == num:
+                    print(f"[DEBUG] got enough datas, will return")
+                    return df
 
     return df
 
@@ -262,8 +264,6 @@ def scrape_url(url, name, num):
             url = update_query(url, "pn", str(page-1), page)
         print(url)
         try:
-            print("\n\nhere===========")
-            print(url)
             html = urllib.request.urlopen(url).read()
             print(f"pages: {page_index}/{page_count} of {page_index}: okay")
         except:

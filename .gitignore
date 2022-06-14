@@ -2,3 +2,6 @@
 **/*.csv
 __pycache__
 .vercel
+.env
+*.db
+*.txt
