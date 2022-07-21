@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, send_from_directory
 from openpyxl import load_workbook
 import os
+import json
 
 app = Flask(__name__)
 
@@ -14,6 +15,7 @@ from datetime import date
 
 
 ku_list = ["minato", "shinagawa", "meguro", "shibuya", "shinjuku"]
+
 ku_to_sc_code = dict(
     minato="13103",
     shinagawa="13109",
@@ -25,7 +27,7 @@ ku_to_sc_code = dict(
 
 cols_to_show_in_html = ['物件名', '最寄駅', '築年数', 'リンク', '坪単価']
 
-how_many_scrape = 100
+how_many_scrape = 1
 days_frequency = 1
 sqlite_db = "sample.db"
 s3_bucket = "estate-flask-sqlite-backup"
@@ -42,7 +44,13 @@ def task_scrape():
         url_base = f"https://suumo.jp/jj/bukken/ichiran/JJ012FC001/?ar=030&bs=011&sc={ku_to_sc_code[ku]}&ta=13&pc=30&po=1&pj=2"
         try:
             df = test2.scrape_url_all(url_base, num=how_many_scrape)
-            handle_db.df_store_to_sqlite(df, f"flask_{ku}_{d1}", sqlite_db)
+            table_name = f"flask_{ku}_{d1}"
+            table_name_latest = f"flask_{ku}_latest"
+            # table_name = "properties"
+            handle_db.df_store_to_sqlite(df, table_name, sqlite_db)
+            handle_db.df_store_to_sqlite(df, table_name_latest, sqlite_db)
+            # handle_db.df_store_to_postgres(df, table_name)
+            # handle_db.df_store_to_postgres(df, table_name_latest)
             log_str = f"okay scrape_url_all at {url_base}, {d1}\n"
             with open("log.txt", "a") as f:
                 f.write(log_str)
@@ -65,9 +73,15 @@ sched.add_job(task_upload,'interval',days=days_frequency)
 sched.start()
 
 task_scrape()
-task_upload()
+# task_upload()
 # task_download()
 
+@app.after_request
+def after_request(response):
+  response.headers.add('Access-Control-Allow-Origin', '*')
+  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+  return response
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -91,6 +105,7 @@ def home():
         tmp = target_date.split("/")
         target_date_parse = f"{tmp[1]}_{tmp[2]}_{tmp[0]}"
         table_name = f"flask_{ku}_{target_date_parse}"
+        print(f"\ntable_here: {table_name}")
         try:
             df = handle_db.df_from_sqlite(table_name, sqlite_db)
         except:
@@ -108,6 +123,17 @@ def home():
 
         return render_template("table.html", table_name=table_name, df_values=df_values, df_columns=df_columns)
 
+def return_success(data):
+    return {
+        'statusCode': 200,
+        'headers': {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST,GET,PUT,DELETE",
+            "Access-Control-Allow-Headers": "Content-Type"
+        },
+        'body': data
+    }
+
 @app.route("/csv", methods=["POST"])
 def csv_download():
     table_name = request.form["table_name"]
@@ -118,6 +144,16 @@ def csv_download():
     file_name = f"{table_name}.xlsx"
     df.to_excel(file_name)
     return send_from_directory("./", file_name, as_attachment=True)
+
+@app.route("/tabledata", methods=["GET"])
+def tabledata_download():
+    ku = request.args.get("ku")
+    table_name = f"flask_{ku}_latest"
+    df = handle_db.df_from_sqlite(table_name, sqlite_db)
+    df.columns = handle_db.en_col
+    tmp = df.iloc[:3, :]
+    res = tmp.to_json(orient="records")
+    return return_success(res)
 
 
         # try:
