@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, send_from_directory
+from flask import Flask, render_template, request, send_from_directory, jsonify
 from openpyxl import load_workbook
 import os
 import json
+import datetime
 
 app = Flask(__name__)
 
@@ -64,7 +65,11 @@ def task_upload():
 
 def task_download():
     if not os.path.exists(sqlite_db):
+        print("will download data from s3")
         handle_s3.download(sqlite_db, s3_bucket)
+        print("done downloading")
+    else:
+        print("database file does exists")
 
 
 sched = BackgroundScheduler(daemon=True)
@@ -72,16 +77,8 @@ sched.add_job(task_scrape,'interval',days=days_frequency)
 sched.add_job(task_upload,'interval',days=days_frequency) 
 sched.start()
 
-task_scrape()
-# task_upload()
-# task_download()
+task_download()
 
-@app.after_request
-def after_request(response):
-  response.headers.add('Access-Control-Allow-Origin', '*')
-  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-  return response
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -123,16 +120,24 @@ def home():
 
         return render_template("table.html", table_name=table_name, df_values=df_values, df_columns=df_columns)
 
-def return_success(data):
-    return {
-        'statusCode': 200,
-        'headers': {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST,GET,PUT,DELETE",
-            "Access-Control-Allow-Headers": "Content-Type"
-        },
-        'body': data
-    }
+@app.after_request
+def after_request(response):
+ response.headers.add('Access-Control-Allow-Origin', '*')
+ response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+ response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+ return response
+
+# @app.after_request
+# def return_success(data):
+#     return {
+#         'statusCode': 200,
+#         'headers': {
+#             "Access-Control-Allow-Origin": "*",
+#             "Access-Control-Allow-Methods": "POST,GET,PUT,DELETE,OPTIONS",
+#             "Access-Control-Allow-Headers": "Content-Type"
+#         },
+#         'body': data
+#     }
 
 @app.route("/csv", methods=["POST"])
 def csv_download():
@@ -148,12 +153,31 @@ def csv_download():
 @app.route("/tabledata", methods=["GET"])
 def tabledata_download():
     ku = request.args.get("ku")
-    table_name = f"flask_{ku}_latest"
-    df = handle_db.df_from_sqlite(table_name, sqlite_db)
+    try:
+        table_name = f"flask_{ku}_latest"
+        df = handle_db.df_from_sqlite(table_name, sqlite_db)
+    except:
+        today = datetime.datetime.now()
+        target_month = today.month
+        if target_month < 10:
+            target_month = f"0{target_month}"
+        else:
+            target_month = f"{target_month}"
+
+        target_day = today.day-1
+        if target_day < 10:
+            target_day = f"0{target_day}"
+        else:
+            target_day = f"{target_day}"
+        
+        table_name = f"flask_{ku}_{target_month}_{target_day}_{today.year}"
+        df = handle_db.df_from_sqlite(table_name, sqlite_db)
+        
     df.columns = handle_db.en_col
-    tmp = df.iloc[:3, :]
+    tmp = df.iloc[:, :]
     res = tmp.to_json(orient="records")
-    return return_success(res)
+    # return return_success(res)
+    return jsonify(res)
 
 
         # try:

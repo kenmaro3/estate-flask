@@ -60,15 +60,28 @@ def df_store_to_postgres(df, table_name):
         'password': 'password',
         'host': 'localhost',
         'port': '5432', # なくてもOK
-        'database': 'test'
+        'database': 'estate'
     }
 
     engine = create_engine('postgresql://{user}:{password}@{host}:{port}/{database}'.format(**connection_config))
 
     # PostgreSQLに接続する
-    conn = psycopg2.connect(**connection_config)
+    # conn = psycopg2.connect(**connection_config)
+    print("\nhere============")
+    print(df)
+    print(df.columns)
+    df["land_area"] = df["land_area"].astype(float)
+    df["building_area"] = df["building_area"].astype(float)
+    df["year"] = df["year"].astype(int)
+    df["price"] = df["price"].astype(int)
+    df["walk"] = df["walk"].astype(int)
+    df["land_area_tsubo"] = df["land_area_tsubo"].astype(float)
+    df["building_area_tsubo"] = df["building_area_tsubo"].astype(float)
+    df["tsubo_tanka"] = df["tsubo_tanka"].astype(float)
 
-    df.to_sql(table_name, con=engine, if_exists='append', index=None)
+    print(df.dtypes)
+
+    df.to_sql(table_name, con=engine, if_exists='append', index=True)
 
 if __name__ == "__main__":
     df = pd.read_excel("../property_minato.xlsx", engine="openpyxl")
